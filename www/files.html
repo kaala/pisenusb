@@ -105,7 +105,7 @@
 
 		async function update() {
 			var rex = /(..........)\s+(\S+)\s+(\w+)\s+(\w+)\s+(\S+)\s+(............)\s+(.+)/;
-			var res = await cgi.file('ls -lhpLA --full-time', `.${ui.dir}`);
+			var res = await cgi.file('ls -lhpLA', `.${ui.dir}`);
 			var data = res.data.split('\n').filter(function (e) { return e.length; });
 			ui.files = data.map(function (e) {
 				return e.match(rex);
