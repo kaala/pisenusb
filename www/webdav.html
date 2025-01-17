@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>webdav manager</title>
+	<style>
+		body {
+			margin: 20px 40px;
+			font-family: sans-serif;
+			font-size: small;
+		}
+
+		a {
+			margin-right: 10px;
+		}
+
+		table {
+			border-collapse: collapse;
+		}
+
+		tr>* {
+			padding: 2px 5px;
+			border: 1px solid black;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>webdav manager</h1>
+	<p>
+	<form target="_blank" method="post" action="#uploadfile"
+		onsubmit="cgi.upload(ui.dir,this.file.files[0]).then(refresh);return false">
+		File: <input type="file" name="file">
+		<input type="submit" value="uploadFile">
+	</form>
+	</p>
+	<p>
+	<table>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Size</th>
+				<th>Date</th>
+				<th>Info</th>
+				<th>Opts</th>
+			</tr>
+		</thead>
+		<tbody id="lists">
+		</tbody>
+	</table>
+	</p>
+	<p>
+		<a href="#refresh" onclick="refresh();return false">Refresh</a>
+	</p>
+	<script>
+		var ui = {
+			dir: '/',
+			info: {},
+			files: [],
+		};
+
+		var cgi = {
+			lsfile: async function (dir) {
+				var url = `${dir}`;
+				var output = await fetch(url, { method: 'PROPFIND', headers: { Depth: 1 } });
+				var text = await output.text();
+				var parser = new DOMParser();
+				var find = parser.parseFromString(text, 'text/xml');
+				var paths = Array.from(find.querySelectorAll('response'));
+				var files = paths.map(function (e, i) {
+					// name,url,size,date,status,dir
+					var url = e.querySelector('href').innerHTML;
+					var name = e.querySelector('displayname').innerHTML;
+					var size = e.querySelector('getcontentlength') && e.querySelector('getcontentlength').innerHTML;
+					var mtime = e.querySelector('propstat>prop>getlastmodified');
+					mtime = mtime && new Date(mtime.innerHTML).toISOString();
+					if (e.querySelector('resourcetype>collection')) {
+						if (i == 0) {
+							name = '..';
+							url = `${url}..`;
+						}
+						return [name, url, '', '', 'dir', dir];
+					} else {
+						return [name, url, size, mtime, 'file', dir];
+					}
+				});
+				var req = { dir: dir };
+				var res = { status: output.status, text: output.statusText, files: files };
+				console.log(url, req, res);
+				return res;
+			},
+			chdir: async function (dir) {
+				ui.dir = dir;
+			},
+			rmfile: async function (dir, fp) {
+				var url = `${dir}${fp}`;
+				var output = await fetch(url, { method: 'DELETE' });
+				var text = await output.text();
+				var req = { dir: dir, file: fp };
+				var res = { status: output.status, text: output.statusText };
+				console.log(url, req, res);
+				return res;
+			},
+			upload: async function (dir, fd) {
+				var name = fd.name;
+				var file = await fd.arrayBuffer();
+				var url = `${dir}${name}`;
+				var output = await fetch(url, { method: 'PUT', body: file });
+				var text = await output.text();
+				var req = { dir: dir, filename: name, file: file };
+				var res = { status: output.status, text: output.statusText };
+				console.log(url, req, res);
+				return res;
+			},
+		};
+
+		async function update() {
+			var data = await cgi.lsfile(ui.dir);
+			ui.files = data.files;
+			var dom = ``;
+			ui.files.forEach(function (e) {
+				dom += `<tr>`;
+				dom += `<td><a href="${e[5]}${e[0]}" target="_blank">${e[0]}</a></td>`;
+				dom += `<td>${e[2]}</td>`;
+				dom += `<td>${e[3]}</td>`;
+				dom += `<td>${e[4]}</td>`;
+				dom += `<td>`;
+				if (e[4] == 'file') { dom += `<a href="${e[1]}" target="_blank" download>download</a>`; }
+				if (e[4] == 'dir') { dom += `<a href="#chdir" onclick="cgi.chdir('${e[1]}').then(refresh);return false">chdir</a>`; }
+				dom += `<a href="#delete" onclick="cgi.rmfile(ui.dir,'${e[0]}').then(refresh);return false">delete</a>`;
+				dom += `</td>`;
+				dom += `</tr>`;
+			});
+			var el = document.querySelector('#lists');
+			el.innerHTML = dom;
+		}
+
+		async function refresh() {
+			await update();
+		}
+		setTimeout(refresh, 0);
+	</script>
+</body>
+
+</html>

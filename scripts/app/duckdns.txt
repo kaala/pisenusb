@@ -1,0 +1,7 @@
+set -x
+
+token='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+mac_address=`hexdump -n 6 -s 0x1fc00 -e '1/1 "%02x"' /dev/mtd0`
+wan_ip_address=`ifstatus wwan |  jsonfilter -e '@["ipv4-address"][0].address'`
+
+curl -k  -w "\n" "https://www.duckdns.org/update?domains=${mac_address:6:6}&token=$token&ip=$wan_ip_address"

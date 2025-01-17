@@ -1,0 +1,59 @@
+# opkg update
+# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
+
+lan_ip_address="192.168.144.1"
+
+mac_address=`hexdump -n 6 -s 0x1fc00 -e '1/1 "%02X"' /dev/mtd0`
+wlan_name="PISEN_TB_${mac_address:6:6}"
+wlan_password="00000000"
+
+uci set network.lan.ipaddr="$lan_ip_address"
+uci commit network
+
+uci set network.wwan=interface
+uci set network.wwan.proto='dhcp'
+uci commit network
+
+uci set wireless.@wifi-device[0].disabled='0'
+uci set wireless.@wifi-iface[0].disabled='0'
+uci set wireless.@wifi-iface[0].encryption='psk2'
+uci set wireless.@wifi-iface[0].ssid="$wlan_name"
+uci set wireless.@wifi-iface[0].key="$wlan_password"
+uci commit wireless
+
+# uci set system.@system[0].timezone='CST-8'
+# uci commit system
+
+service system restart
+service network restart
+service firewall stop
+service firewall disable
+
+# sed -i 's_https\?://downloads.openwrt.org_https://mirrors.tuna.tsinghua.edu.cn/openwrt_' /etc/opkg/distfeeds.conf
+
+cat << "eof" > /etc/rc.local
+# Put your custom commands here that should be executed once
+# the system init finished. By default this file does nothing.
+
+echo "23" > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio23/direction
+echo 1 > /sys/class/gpio/gpio23/value
+echo "26" > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio26/direction
+echo 1 > /sys/class/gpio/gpio26/value
+
+echo 0 > /sys/class/leds/blue:system/brightness
+
+sleep 3
+
+mkdir /tmp/mnt
+mkdir /tmp/mnt/asu
+mkdir /tmp/mnt/disk
+mount /dev/sda1 /tmp/mnt/asu
+mount /dev/sda2 /tmp/mnt/disk
+
+find /tmp/mnt/asu/asu -type f | sort | xargs -n1 sh
+
+exit 0
+
+eof

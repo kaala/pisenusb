@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "content-type: text/plain"
+echo "request-at: $( date -Iseconds )"
+echo ""
+
+cat - > $DOCUMENT_ROOT$PATH_INFO
+ls -lh $DOCUMENT_ROOT$PATH_INFO
