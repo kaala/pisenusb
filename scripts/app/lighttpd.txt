@@ -5,12 +5,12 @@ dir-listing.activate = "enable"
 
 server.modules = ( "mod_alias", "mod_cgi", "mod_webdav_min" )
 
-$HTTP["url"] =^ "/cgi-bin/" {
+$HTTP["url"] =^ "/cgi-bin" {
     dir-listing.activate = "disable"
     cgi.assign = ( "" => "" )
 }
 
-$HTTP["url"] =^ "/dav/" {
+$HTTP["url"] =^ "/dav" {
     dir-listing.activate = "enable"
     webdav.activate = "enable"
     alias.url = ( "/dav" => "/tmp/mnt" )

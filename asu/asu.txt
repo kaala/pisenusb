@@ -1,5 +1,5 @@
 # opkg update
-# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server lighttpd lighttpd-mod-alias lighttpd-mod-cgi lighttpd-mod-webdav-min vsftpd
+# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server lighttpd lighttpd-mod-alias lighttpd-mod-cgi lighttpd-mod-webdav-min
 
 lan_ip_address="192.168.144.1"
 
@@ -33,8 +33,6 @@ service firewall stop
 service firewall disable
 service lighttpd stop
 service lighttpd disable
-service vsftpd stop
-service vsftpd disable
 
 cat << "eof" > /etc/rc.local
 # Put your custom commands here that should be executed once
