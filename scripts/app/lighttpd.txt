@@ -1,19 +1,19 @@
 cat << "eof" > /tmp/lighttpd.conf
-server.modules = ( "mod_alias", "mod_cgi", "mod_webdav_min" )
-
 server.port = 8080
 server.document-root = "/tmp/mnt/disk/www"
-
 dir-listing.activate = "enable"
+
+server.modules = ( "mod_alias", "mod_cgi", "mod_webdav_min" )
 
 $HTTP["url"] =^ "/cgi-bin/" {
     dir-listing.activate = "disable"
     cgi.assign = ( "" => "" )
 }
 
-$HTTP["url"] =^ "/webdav/" {
+$HTTP["url"] =^ "/dav/" {
+    dir-listing.activate = "enable"
     webdav.activate = "enable"
-    alias.url = ( "/mnt" => "/tmp/mnt" )
+    alias.url = ( "/dav" => "/tmp/mnt" )
 }
 
 eof
