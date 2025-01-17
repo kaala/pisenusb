@@ -3,5 +3,6 @@ echo "content-type: text/plain"
 echo "request-at: $( date -Iseconds )"
 echo ""
 
-cat - > $DOCUMENT_ROOT$PATH_INFO
-ls -lh $DOCUMENT_ROOT$PATH_INFO
+cd "$DOCUMENT_ROOT"
+cat - > "$DOCUMENT_ROOT$PATH_INFO"
+ls -lh "$DOCUMENT_ROOT$PATH_INFO"

@@ -1,7 +1,7 @@
 mkdir /var/run/vsftpd
 
 cat << "eof" > /tmp/vsftpd.conf
-background=NO
+background=YES
 listen=YES
 
 anonymous_enable=NO

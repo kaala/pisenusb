@@ -3,4 +3,5 @@ echo "content-type: text/plain"
 echo "request-at: $( date -Iseconds )"
 echo ""
 
+cd "$DOCUMENT_ROOT"
 cat - | sh
