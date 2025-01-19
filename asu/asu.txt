@@ -1,5 +1,5 @@
 # opkg update
-# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server lighttpd lighttpd-mod-alias lighttpd-mod-cgi lighttpd-mod-webdav-min
+# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
 
 lan_ip_address="192.168.144.1"
 
@@ -21,18 +21,11 @@ uci set wireless.@wifi-iface[0].ssid="$wlan_name"
 uci set wireless.@wifi-iface[0].key="$wlan_password"
 uci commit wireless
 
-# uci set system.@system[0].timezone='CST-8'
-# uci commit system
-
-# sed -i 's_https\?://downloads.openwrt.org_https://mirrors.tuna.tsinghua.edu.cn/openwrt_' /etc/opkg/distfeeds.conf
-
 service system restart
 service network restart
 
 service firewall stop
 service firewall disable
-service lighttpd stop
-service lighttpd disable
 
 cat << "eof" > /etc/rc.local
 # Put your custom commands here that should be executed once

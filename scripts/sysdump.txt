@@ -1,0 +1,25 @@
+set -x
+
+mk=`mktemp -d -t sysdump.XXXXXX -p /tmp/mnt/disk/media`
+
+cd $mk
+
+
+dmesg > dmesg.txt
+
+cat /proc/cpuinfo | tee cpuinfo.txt
+cat /proc/meminfo | tee meminfo.txt
+cat /proc/mtd | tee mtd.txt
+
+mkdir mtd
+dd if=/dev/mtd0 of=mtd/mtd0.bin
+dd if=/dev/mtd1 of=mtd/mtd1.bin
+dd if=/dev/mtd2 of=mtd/mtd2.bin
+dd if=/dev/mtd3 of=mtd/mtd3.bin
+dd if=/dev/mtd4 of=mtd/mtd4.bin
+dd if=/dev/mtd5 of=mtd/mtd5.bin
+
+cd ..
+
+tar -cvf sysdump.tar $mk
+rm -r $mk
