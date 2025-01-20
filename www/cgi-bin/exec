@@ -2,6 +2,5 @@
 echo "content-type: text/plain"
 echo "request-time: $( date -Iseconds )"
 echo ""
-
 cd "$DOCUMENT_ROOT"
 cat - | sh

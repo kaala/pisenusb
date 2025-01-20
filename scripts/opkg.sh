@@ -3,13 +3,13 @@ remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
 
 
 [ "$1" = "update" ] && {
-  echo $remote
-
   test -d $pkgdir || mkdir $pkgdir
   test -d $pkgdir/cache && rm -rf $pkgdir/cache
   mkdir $pkgdir/cache
   mkdir $pkgdir/cache/temp
-
+}
+[ "$1" = "update" ] && {
+  echo $remote
   cd $pkgdir/cache
   curl -k $remote/targets/ath79/generic/packages/Packages > core.txt
   grep -e Filename -H core.txt | cut -d: -f1,3
@@ -31,13 +31,11 @@ remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
   txt=core.txt
   url=$remote/targets/ath79/generic/packages/$2
 }
-
 [ "$1" = "base" ] && {
   cd $pkgdir/cache
   txt=base.txt
   url=$remote/packages/mips_24kc/base/$2
 }
-
 [ "$1" = "packages" ] && {
   cd $pkgdir/cache
   txt=packages.txt
@@ -46,10 +44,7 @@ remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
 
 [ "$txt" != "" ] && {
 }
-
 [ "$url" != "" ] && {
-  echo $url
-
   cd $pkgdir/cache/temp
   curl -k $url -o $2
   tar -xzf $2
