@@ -1,1 +1,1 @@
-rm -r "/tmp/mnt/sys/System Volume Information"
+rm -r "/tmp/mnt/asu/System Volume Information"

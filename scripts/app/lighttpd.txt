@@ -1,7 +1,6 @@
 cat << "eof" > /tmp/lighttpd.conf
 server.port = 8080
 server.document-root = "/tmp/mnt/disk/www"
-dir-listing.activate = "enable"
 
 server.modules = ( "mod_alias", "mod_cgi", "mod_webdav_min" )
 
