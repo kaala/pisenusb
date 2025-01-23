@@ -21,12 +21,6 @@ uci set wireless.@wifi-iface[0].ssid="$wlan_name"
 uci set wireless.@wifi-iface[0].key="$wlan_password"
 uci commit wireless
 
-service system restart
-service network restart
-
-service firewall stop
-service firewall disable
-
 cat << "eof" > /etc/rc.local
 # Put your custom commands here that should be executed once
 # the system init finished. By default this file does nothing.
@@ -41,6 +35,8 @@ echo 1 > /sys/class/gpio/gpio26/value
 echo 0 > /sys/class/leds/blue:system/brightness
 
 sleep 3
+
+service firewall stop
 
 mkdir /tmp/mnt
 mkdir /tmp/mnt/asu
