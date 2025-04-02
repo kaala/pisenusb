@@ -42,7 +42,9 @@ remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
   url=$remote/packages/mips_24kc/packages/$2
 }
 
-[ "$txt" != "" ] && {
+[ "$url" != "" ] && {
+  echo $txt:$2
+  echo $url
 }
 [ "$url" != "" ] && {
   cd $pkgdir/cache/temp

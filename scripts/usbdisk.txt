@@ -1,1 +1,2 @@
-rm -r "/tmp/mnt/asu/System Volume Information"
+rm -rf "/tmp/mnt/asu/FOUND.*"
+rm -rf "/tmp/mnt/asu/System Volume Information"
