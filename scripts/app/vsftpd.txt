@@ -1,5 +1,3 @@
-mkdir /var/run/vsftpd
-
 cat << "eof" > /tmp/vsftpd.conf
 background=yes
 listen=yes
@@ -22,4 +20,5 @@ anon_other_write_enable=yes
 
 eof
 
+mkdir /var/run/vsftpd
 vsftpd /tmp/vsftpd.conf
