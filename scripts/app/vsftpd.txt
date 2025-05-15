@@ -1,19 +1,19 @@
 mkdir /var/run/vsftpd
 
 cat << "eof" > /tmp/vsftpd.conf
-background=YES
-listen=YES
+background=yes
+listen=yes
+check_shell=no
+session_support=no
+write_enable=yes
+ftp_username=nobody
 
-anonymous_enable=NO
-
-local_enable=YES
+local_enable=no
 local_umask=022
-local_root=/tmp/mnt
 
-write_enable=YES
-check_shell=NO
-session_support=NO
-use_localtime=YES
+anonymous_enable=yes
+anon_umask=000
+anon_root=/tmp/mnt
 
 eof
 
