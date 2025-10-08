@@ -1,5 +1,5 @@
 # opkg update
-# opkg install nano curl unzip luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
+# opkg install nano curl unzip luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-zram kmod-lib-lz4 zram-swap kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
 
 lan_ip_address="192.168.144.1"
 
