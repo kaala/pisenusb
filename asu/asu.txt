@@ -28,6 +28,7 @@ cat << "eof" > /etc/rc.local
 echo "23" > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio23/direction
 echo 1 > /sys/class/gpio/gpio23/value
+
 echo "26" > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio26/direction
 echo 1 > /sys/class/gpio/gpio26/value
@@ -40,11 +41,11 @@ service firewall stop
 
 mkdir /tmp/mnt
 mkdir /tmp/mnt/asu
-mkdir /tmp/mnt/disk
+mkdir /tmp/mnt/media
 mount /dev/sda1 /tmp/mnt/asu
-mount /dev/sda2 /tmp/mnt/disk
+mount /dev/sda2 /tmp/mnt/media
 
-find /tmp/mnt/asu/asu -type f | sort | xargs -n1 sh
+find /tmp/mnt/asu/asu -type f | sort | xargs -n1 sh > /tmp/output.log
 
 exit 0
 
