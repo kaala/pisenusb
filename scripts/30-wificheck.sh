@@ -1,7 +1,5 @@
 cat << "eof" > /tmp/wificheck.sh
 
-sleep 30
-
 while :
 do
 
@@ -17,4 +15,5 @@ done
 
 eof
 
+sleep 10
 sh /tmp/wificheck.sh &
