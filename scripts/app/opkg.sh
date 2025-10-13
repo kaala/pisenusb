@@ -1,4 +1,4 @@
-pkgdir=/tmp/mnt/disk/pkgs
+pkgdir=/tmp/mnt/usb/pkgs
 remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
 
 
