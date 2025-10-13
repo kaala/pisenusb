@@ -1,5 +1,5 @@
 # opkg update
-# opkg install nano curl unzip luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-zram kmod-lib-lz4 zram-swap kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
+# opkg install nano curl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn kmod-zram kmod-lib-lzo zram-swap kmod-usb-storage kmod-fs-ext4 kmod-fs-vfat e2fsprogs openssh-sftp-server
 
 lan_ip_address="192.168.144.1"
 
@@ -21,6 +21,9 @@ uci set wireless.@wifi-iface[0].ssid="$wlan_name"
 uci set wireless.@wifi-iface[0].key="$wlan_password"
 uci commit wireless
 
+service firewall stop
+service firewall disable
+
 cat << "eof" > /etc/rc.local
 # Put your custom commands here that should be executed once
 # the system init finished. By default this file does nothing.
@@ -33,11 +36,9 @@ echo "26" > /sys/class/gpio/export
 echo "out" > /sys/class/gpio/gpio26/direction
 echo 1 > /sys/class/gpio/gpio26/value
 
-echo 0 > /sys/class/leds/blue:system/brightness
+echo 1 > /sys/class/leds/blue:system/brightness
 
 sleep 3
-
-service firewall stop
 
 mkdir /tmp/mnt
 mkdir /tmp/mnt/asu
@@ -45,6 +46,9 @@ mkdir /tmp/mnt/media
 mount /dev/sda1 /tmp/mnt/asu
 mount /dev/sda2 /tmp/mnt/media
 
+exec 2>&1 > /tmp/mnt/output.log
+
+cd /tmp/mnt
 find /tmp/mnt/asu/asu -type f | sort | xargs -n1 sh > /tmp/output.log
 
 exit 0
