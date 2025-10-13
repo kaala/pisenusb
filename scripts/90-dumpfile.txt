@@ -1,6 +1,6 @@
 set -x
 
-mk=`mktemp -d -t sysdump.XXXXXX -p /tmp/mnt/disk/media`
+mk=`mktemp -d -t sysdump.XXXXXX -p /tmp/mnt/usb`
 
 cd $mk
 
@@ -21,5 +21,5 @@ dd if=/dev/mtd5 of=mtd/mtd5.bin
 
 cd ..
 
-tar -cvf sysdump.tar $mk
+tar -cvf dumpfile.tar $mk
 rm -r $mk
