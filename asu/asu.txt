@@ -42,9 +42,9 @@ sleep 3
 
 mkdir /tmp/mnt
 mkdir /tmp/mnt/asu
-mkdir /tmp/mnt/media
+mkdir /tmp/mnt/usb
 mount /dev/sda1 /tmp/mnt/asu
-mount /dev/sda2 /tmp/mnt/media
+mount /dev/sda2 /tmp/mnt/usb
 
 exec 2>&1 > /tmp/mnt/output.log
 
