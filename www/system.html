@@ -1,84 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>device manager</title>
+        <link rel="stylesheet" href="app.css" />
+        <style>
+            textarea.output {
+                width: 640px;
+                height: 480px;
+            }
+        </style>
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>device manager</title>
-    <style>
-        body {
-            margin: 20px 40px;
-            font-family: sans-serif;
-            font-size: small;
-        }
+    <body>
+        <h1>device</h1>
+        <p>
+            <a href="/">Home</a>
+        </p>
+        <p>
+            <textarea class="output"></textarea>
+        </p>
+        <p>
+            <a href="#reboot" onclick="cgi.send('reboot');return false">Reboot</a>
+            <a href="#shutdown" onclick="cgi.send('poweroff');return false">Shutdown</a>
+        </p>
+        <script>
+            var ui = {
+                info: {}
+            };
 
-        a {
-            margin-right: 10px;
-        }
+            var cgi = {
+                send: async function (exec) {
+                    var url = `/cgi-bin/exec`;
+                    var output = await fetch(url, { method: "POST", body: exec });
+                    var data = await output.text();
+                    var req = { exec: exec };
+                    var res = { data: data };
+                    console.log(url, req, res);
+                    return res;
+                },
+                uploadfile: async function (fd) {
+                    var name = fd.name;
+                    var file = await fd.arrayBuffer();
+                    var url = `/cgi-bin/uploadfile/${ui.dir}${name}`;
+                    var output = await fetch(url, { method: "PUT", body: file });
+                    var data = await output.text();
+                    var req = { filename: name, file: file };
+                    var res = data.split("\n").filter(function (e) {
+                        return e.length;
+                    });
+                    console.log(url, req, res);
+                    return res;
+                }
+            };
 
-        table {
-            border-collapse: collapse;
-        }
-
-        tr>* {
-            padding: 2px 5px;
-            border: 1px solid black;
-        }
-
-        textarea {
-            width: 640px;
-            height: 480px;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>device</h1>
-    <p>
-        <a href="/">Home</a>
-    </p>
-    <p>
-        <textarea></textarea>
-    </p>
-    <p>
-        <a href="#reboot" onclick="cgi.send('reboot');return false">Reboot</a>
-        <a href="#shutdown" onclick="cgi.send('poweroff');return false">Shutdown</a>
-    </p>
-    <script>
-        var ui = {
-            info: {},
-        };
-
-        var cgi = {
-            send: async function (exec) {
-                var url = `/cgi-bin/exec`;
-                var output = await fetch(url, { method: 'POST', body: exec });
-                var data = await output.text();
-                var req = { exec: exec };
-                var res = { data: data };
-                console.log(url, req, res);
-                return res;
-            },
-            uploadfile: async function (fd) {
-                var name = fd.name;
-                var file = await fd.arrayBuffer();
-                var url = `/cgi-bin/uploadfile/${ui.dir}${name}`;
-                var output = await fetch(url, { method: 'PUT', body: file });
-                var data = await output.text();
-                var req = { filename: name, file: file };
-                var res = data.split('\n').filter(function (e) { return e.length; });
-                console.log(url, req, res);
-                return res;
-            },
-        };
-
-        async function refresh() {
-            var data = await cgi.send('dmesg');
-            ui.info.data = data.data;
-            var tx = document.querySelector('textarea');
-            tx.value = ui.info.data;
-        }
-        setTimeout(refresh, 0);
-    </script>
-</body>
-
+            async function refresh() {
+                var data = await cgi.send("dmesg");
+                ui.info.data = data.data;
+                var tx = document.querySelector("textarea.output");
+                tx.value = ui.info.data;
+            }
+            setTimeout(refresh, 0);
+        </script>
+    </body>
 </html>

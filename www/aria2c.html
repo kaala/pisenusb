@@ -1,197 +1,170 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-	<meta charset="UTF-8">
-	<title>aria2c webui</title>
-	<style>
-		body {
-			margin: 20px 40px;
-			font-family: sans-serif;
-			font-size: small;
-		}
-
-		a {
-			margin-right: 10px;
-		}
-
-		table {
-			border-collapse: collapse;
-		}
-
-		tr>* {
-			padding: 2px 5px;
-			border: 1px solid black;
-		}
-	</style>
-	<style>
-		tr.complete {
-			font-style: italic;
-			color: green;
-		}
-
-		tr.error {
-			font-style: italic;
-			color: red;
-		}
-	</style>
-</head>
-
-<body>
-	<h1>aria2c webui</h1>
-	<p>
-		<a href="/files.html">Dir</a>
-	</p>
-	<p>
-	<form target="_blank" method="post" action="#addUri" onsubmit="aria2c.rpc('aria2.addUri',[[this.url.value]]);return false">
-		Url : <input type="text" name="url">
-		<!-- Connections : <input type="text" name="connections" value="5" style="width: 100px"> Dir : <input type="text" name="dir" value="f/" style="width: 100px"> -->
-		<input type="submit" value="addUrl">
-	</form>
-	</p>
-	<p>
-		<a href="#status=all" onclick="ui.status='all';return false">All Status</a>
-		<a href="#status=running" onclick="ui.status='running';return false">Active</a>
-		<a href="#status=finished" onclick="ui.status='finished';return false">Finished</a>
-	</p>
-	<p>
-	<table>
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Status</th>
-				<th>Size</th>
-				<th>Downloaded</th>
-				<th>Speed</th>
-				<th>Connections</th>
-				<th>Opts</th>
-			</tr>
-		</thead>
-		<tbody id="lists">
-		</tbody>
-	</table>
-	</p>
-	<p>
-		<a href="#purgeDownloadResult" onclick="aria2c.rpc('aria2.purgeDownloadResult',[]);return false">Remove All Finished</a>
-		<a href="#pauseAll" onclick="aria2c.rpc('aria2.pauseAll',[]);return false">Pause All</a>
-		<a href="#unpauseAll" onclick="aria2c.rpc('aria2.unpauseAll',[]);return false">Unpause All</a>
-	</p>
-	<p id="status"></p>
-	<p>
-		<a href="#refresh" onclick="update();return false">Refresh Now</a>
-		<a href="#refresh=0" onclick="ui.refresh=0;return false">Stop Refresh</a>
-	</p>
-	<script>
-		var ui = {
-			api: 'http://hostname:6800/jsonrpc'.replace('hostname', window.location.hostname),
-			id: 1,
-			status: 'all',
-			refresh: 10,
-			tasks: [],
-			info: {},
-		};
-		var aria2c = {
-			rpc: async function (cmd, args) {
-				var url = ui.api;
-				var req = { id: ui.id, method: cmd, params: args };
-				ui.id += 1;
-				var res = await fetch(url, { method: 'POST', body: JSON.stringify(req) });
-				var out = await res.json();
-				console.log(url, req, out);
-				return out;
+	<head>
+		<meta charset="UTF-8" />
+		<title>aria2c webui</title>
+		<link rel="stylesheet" href="app.css" />
+		<style>
+			tr.complete {
+				font-style: italic;
+				color: darkblue;
 			}
-		};
-
-		function basename(path) {
-			return path.split('/').pop();
-		}
-		function formatBytes(a, b) {
-			if (0 == a) return "0 Bytes";
-			var c = 1024,
-				d = b || 2,
-				e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-				f = Math.floor(Math.log(a) / Math.log(c));
-			return parseFloat((a / Math.pow(c, f)).toFixed(d)) + " " + e[f];
-		}
-
-		async function update() {
-			var info = await aria2c.rpc('aria2.getGlobalStat', []);
-			ui.info = Object.assign({}, info.result);
-			var active = await aria2c.rpc('aria2.tellActive', []);
-			var waiting = await aria2c.rpc('aria2.tellWaiting', [0, 1000]);
-			var stopped = await aria2c.rpc('aria2.tellStopped', [0, 1000]);
-			var task = [active.result, waiting.result, stopped.result];
-			ui.tasks = task.flat();
-			updateDom();
-		}
-		function updateDom() {
-			let lists = ui.tasks;
-			let ret = ``;
-			for (let x in lists) {
-				let v = lists[x];
-				let file = v.files[0];
-				ret += `<tr class="${v['status']}">`;
-				ret += `<td>`;
-				for (let x1 in v.files) {
-					let v1 = v.files[x1];
-					ret += `<div><a href="${v1.path.substr(v.dir.length - 'storage/'.length)}">${basename(v1.path)}</a></div>`;
-				}
-				ret += `</td>`;
-				ret += `<td>`;
-				if (v.status == 'active') {
-					ret += `<a href="#" onclick="aria2c.rpc('aria2.pause',['${v.gid}']);return false">${v.status}</a>`;
-				}
-				if (v.status == 'paused') {
-					ret += `<a href="#" onclick="aria2c.rpc('aria2.unpause',['${v.gid}']);return false">${v.status}</a>`;
-				}
-				if (v.status == 'complete') {
-					ret += `<a>${v.status}</a>`;
-				}
-				if (v.status == 'error') {
-					ret += `<a>${v.status}</a>`;
-				}
-				ret += `</td>`;
-				ret += `<td>`;
-				for (let x1 in v.files) {
-					let v1 = v.files[x1];
-					ret += `${formatBytes(v1.length)}`;
-				}
-				ret += `</td>`;
-				ret += `<td>`;
-				for (let x1 in v.files) {
-					let v1 = v.files[x1];
-					ret += `${formatBytes(v1.completedLength)}`;
-				}
-				ret += `</td>`;
-				ret += `<td>${formatBytes(v.downloadSpeed)}</td>`;
-				ret += `<td>${v.connections}</td>`;
-				ret += `<td><a href="#" onclick="aria2c.rpc('aria2.remove',['${v.gid}']);return false">remove</a></td>`;
-				ret += `</tr>`;
+			tr.error {
+				font-style: italic;
+				color: red;
 			}
-			var el = document.querySelector('#lists');
-			el.innerHTML = ret;
-			let stat = ``;
-			stat += `<a>downloadSpeed: ${ui.info['downloadSpeed']}</a>`;
-			stat += `<a>uploadSpeed: ${ui.info['uploadSpeed']}</a>`;
-			stat += `<a>numActive: ${ui.info['numActive']}</a>`;
-			stat += `<a>numWaiting: ${ui.info['numWaiting']}</a>`;
-			stat += `<a>numStopped: ${ui.info['numStopped']}</a>`;
-			var ss = document.querySelector('#status');
-			ss.innerHTML = stat;
-		}
+		</style>
+	</head>
 
-		await aria2c.rpc('aria2.getVersion', []);
-		await aria2c.rpc('system.listMethods', []);
-		await aria2c.rpc('aria2.getGlobalOption', []);
+	<body>
+		<h1>aria2c webui</h1>
+		<p>
+			<a href="/files.html">Dir</a>
+		</p>
+		<form target="_blank" method="post" action="#addUri" onsubmit="aria2c.rpc('aria2.addUri',[[this.url.value]]);return false">
+			Url : <input type="text" name="url" />
+			<!-- Connections : <input type="text" name="connections" value="5" style="width: 100px"> Dir : <input type="text" name="dir" value="f/" style="width: 100px"> -->
+			<input type="submit" value="addUrl" />
+		</form>
+		<p>
+			<a href="#status=all" onclick="ui.status='all';return false">All Status</a>
+			<a href="#status=running" onclick="ui.status='running';return false">Active</a>
+			<a href="#status=finished" onclick="ui.status='finished';return false">Finished</a>
+		</p>
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Status</th>
+					<th>Size</th>
+					<th>Downloaded</th>
+					<th>Speed</th>
+					<th>Connections</th>
+					<th>Opts</th>
+				</tr>
+			</thead>
+			<tbody id="lists"></tbody>
+		</table>
+		<p>
+			<a href="#purgeDownloadResult" onclick="aria2c.rpc('aria2.purgeDownloadResult',[]);return false">Remove All Finished</a>
+			<a href="#pauseAll" onclick="aria2c.rpc('aria2.pauseAll',[]);return false">Pause All</a>
+			<a href="#unpauseAll" onclick="aria2c.rpc('aria2.unpauseAll',[]);return false">Unpause All</a>
+		</p>
+		<p id="status"></p>
+		<p>
+			<a href="#refresh" onclick="update();return false">Refresh Now</a>
+			<a href="#refresh=0" onclick="ui.refresh=0;return false">Stop Refresh</a>
+		</p>
+		<script>
+			var ui = {
+				api: 'http://hostname:6800/jsonrpc'.replace('hostname', window.location.hostname),
+				id: 1,
+				status: 'all',
+				refresh: 10,
+				tasks: [],
+				info: {},
+			};
+			var aria2c = {
+				rpc: async function (cmd, args) {
+					var url = ui.api;
+					var req = { id: ui.id, method: cmd, params: args };
+					ui.id += 1;
+					var res = await fetch(url, { method: 'POST', body: JSON.stringify(req) });
+					var out = await res.json();
+					console.log(url, req, out);
+					return out;
+				}
+			};
 
-		async function refresh() {
-			await update();
-			if (ui.refresh > 0) {
-				setTimeout(refresh, 1000 * ui.refresh);
+			function basename(path) {
+				return path.split('/').pop();
 			}
-		};
-		setTimeout(refresh, 0);
-	</script>
-</body>
+			function formatBytes(a, b) {
+				if (0 == a) return "0 Bytes";
+				var c = 1024,
+					d = b || 2,
+					e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+					f = Math.floor(Math.log(a) / Math.log(c));
+				return parseFloat((a / Math.pow(c, f)).toFixed(d)) + " " + e[f];
+			}
 
+			async function update() {
+				var info = await aria2c.rpc('aria2.getGlobalStat', []);
+				ui.info = Object.assign({}, info.result);
+				var active = await aria2c.rpc('aria2.tellActive', []);
+				var waiting = await aria2c.rpc('aria2.tellWaiting', [0, 1000]);
+				var stopped = await aria2c.rpc('aria2.tellStopped', [0, 1000]);
+				var task = [active.result, waiting.result, stopped.result];
+				ui.tasks = task.flat();
+				updateDom();
+			}
+			function updateDom() {
+				let lists = ui.tasks;
+				let ret = ``;
+				for (let x in lists) {
+					let v = lists[x];
+					let file = v.files[0];
+					ret += `<tr class="${v['status']}">`;
+					ret += `<td>`;
+					for (let x1 in v.files) {
+						let v1 = v.files[x1];
+						ret += `<div><a href="${v1.path.substr(v.dir.length - 'storage/'.length)}">${basename(v1.path)}</a></div>`;
+					}
+					ret += `</td>`;
+					ret += `<td>`;
+					if (v.status == 'active') {
+						ret += `<a href="#" onclick="aria2c.rpc('aria2.pause',['${v.gid}']);return false">${v.status}</a>`;
+					}
+					if (v.status == 'paused') {
+						ret += `<a href="#" onclick="aria2c.rpc('aria2.unpause',['${v.gid}']);return false">${v.status}</a>`;
+					}
+					if (v.status == 'complete') {
+						ret += `<a>${v.status}</a>`;
+					}
+					if (v.status == 'error') {
+						ret += `<a>${v.status}</a>`;
+					}
+					ret += `</td>`;
+					ret += `<td>`;
+					for (let x1 in v.files) {
+						let v1 = v.files[x1];
+						ret += `${formatBytes(v1.length)}`;
+					}
+					ret += `</td>`;
+					ret += `<td>`;
+					for (let x1 in v.files) {
+						let v1 = v.files[x1];
+						ret += `${formatBytes(v1.completedLength)}`;
+					}
+					ret += `</td>`;
+					ret += `<td>${formatBytes(v.downloadSpeed)}</td>`;
+					ret += `<td>${v.connections}</td>`;
+					ret += `<td><a href="#" onclick="aria2c.rpc('aria2.remove',['${v.gid}']);return false">remove</a></td>`;
+					ret += `</tr>`;
+				}
+				var el = document.querySelector('#lists');
+				el.innerHTML = ret;
+				let stat = ``;
+				stat += `<a>downloadSpeed: ${ui.info['downloadSpeed']}</a>`;
+				stat += `<a>uploadSpeed: ${ui.info['uploadSpeed']}</a>`;
+				stat += `<a>numActive: ${ui.info['numActive']}</a>`;
+				stat += `<a>numWaiting: ${ui.info['numWaiting']}</a>`;
+				stat += `<a>numStopped: ${ui.info['numStopped']}</a>`;
+				var ss = document.querySelector('#status');
+				ss.innerHTML = stat;
+			}
+
+			await aria2c.rpc('aria2.getVersion', []);
+			await aria2c.rpc('system.listMethods', []);
+			await aria2c.rpc('aria2.getGlobalOption', []);
+
+			async function refresh() {
+				await update();
+				if (ui.refresh > 0) {
+					setTimeout(refresh, 1000 * ui.refresh);
+				}
+			};
+			setTimeout(refresh, 0);
+		</script>
+	</body>
 </html>

@@ -1,146 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>file manager</title>
+		<link rel="stylesheet" href="app.css" />
+	</head>
 
-<head>
-	<meta charset="UTF-8">
-	<title>file manager</title>
-	<style>
-		body {
-			margin: 20px 40px;
-			font-family: sans-serif;
-			font-size: small;
-		}
+	<body>
+		<h1>file manager</h1>
+		<p>
+			<a href="/aria2c.html">aria2c</a>
+		</p>
+		<form target="_blank" method="post" action="#uploadfile" onsubmit="cgi.uploadfile(this.file.files[0]).then(refresh);return false">
+			File: <input type="file" name="file" />
+			<input type="submit" value="uploadFile" />
+		</form>
+		<p>
+			<a href="#pardir" onclick="cgi.chdir('..').then(refresh);return false">Up</a>
+		</p>
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Size</th>
+					<th>Date</th>
+					<th>Info</th>
+					<th>Opts</th>
+				</tr>
+			</thead>
+			<tbody id="lists"></tbody>
+		</table>
+		<p>
+			<a href="#refresh" onclick="refresh();return false">Refresh</a>
+		</p>
+		<script>
+			var ui = {
+				dir: "/",
+				files: [],
+				info: {}
+			};
 
-		a {
-			margin-right: 10px;
-		}
-
-		table {
-			border-collapse: collapse;
-		}
-
-		tr>* {
-			padding: 2px 5px;
-			border: 1px solid black;
-		}
-	</style>
-</head>
-
-<body>
-	<h1>file manager</h1>
-	<p>
-		<a href="/aria2c.html">aria2c</a>
-	</p>
-	<p>
-	<form target="_blank" method="post" action="#uploadfile"
-		onsubmit="cgi.uploadfile(this.file.files[0]).then(refresh);return false">
-		File: <input type="file" name="file">
-		<input type="submit" value="uploadFile">
-	</form>
-	</p>
-	<p>
-		<a href="#pardir" onclick="cgi.chdir('..').then(refresh);return false">Up</a>
-	</p>
-	<p>
-	<table>
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Size</th>
-				<th>Date</th>
-				<th>Info</th>
-				<th>Opts</th>
-			</tr>
-		</thead>
-		<tbody id="lists">
-		</tbody>
-	</table>
-	</p>
-	<p>
-		<a href="#refresh" onclick="refresh();return false">Refresh</a>
-	</p>
-	<script>
-		var ui = {
-			dir: '/',
-			files: [],
-			info: {},
-		};
-
-		var cgi = {
-			send: async function (exec) {
-				var url = `/cgi-bin/exec`;
-				var output = await fetch(url, { method: 'POST', body: exec });
-				var data = await output.text();
-				var req = { exec: exec };
-				var res = { data: data };
-				console.log(url, req, res);
-				return res;
-			},
-			file: async function (ex, fd) {
-				return await cgi.send(`${ex} "${fd}"`);
-			},
-			chdir: async function (dir) {
-				if (dir == '..') {
-					var par = ui.dir.split('/');
-					par.pop();
-					par.pop();
-					ui.dir = par.join('/');
-					if (ui.dir.length == 0) { ui.dir = '/'; }
-				} else {
-					ui.dir = dir;
+			var cgi = {
+				send: async function (exec) {
+					var url = `/cgi-bin/exec`;
+					var output = await fetch(url, { method: "POST", body: exec });
+					var data = await output.text();
+					var req = { exec: exec };
+					var res = { data: data };
+					console.log(url, req, res);
+					return res;
+				},
+				file: async function (ex, fd) {
+					return await cgi.send(`${ex} "${fd}"`);
+				},
+				chdir: async function (dir) {
+					if (dir == "..") {
+						var par = ui.dir.split("/");
+						par.pop();
+						par.pop();
+						ui.dir = par.join("/");
+						if (ui.dir.length == 0) {
+							ui.dir = "/";
+						}
+					} else {
+						ui.dir = dir;
+					}
+				},
+				uploadfile: async function (fd) {
+					var name = fd.name;
+					var file = await fd.arrayBuffer();
+					var url = `/cgi-bin/uploadfile/${ui.dir}${name}`;
+					var output = await fetch(url, { method: "PUT", body: file });
+					var data = await output.text();
+					var req = { filename: name, file: file };
+					var res = data.split("\n").filter(function (e) {
+						return e.length;
+					});
+					console.log(url, req, res);
+					return res;
 				}
-			},
-			uploadfile: async function (fd) {
-				var name = fd.name;
-				var file = await fd.arrayBuffer();
-				var url = `/cgi-bin/uploadfile/${ui.dir}${name}`;
-				var output = await fetch(url, { method: 'PUT', body: file });
-				var data = await output.text();
-				var req = { filename: name, file: file };
-				var res = data.split('\n').filter(function (e) { return e.length; });
-				console.log(url, req, res);
-				return res;
-			},
-		};
+			};
 
-		async function update() {
-			var rex = /(..........)\s+(\S+)\s+(\w+)\s+(\w+)\s+(\S+)\s+(............)\s+(.+)/;
-			var res = await cgi.file('ls -lhpLA', `.${ui.dir}`);
-			var data = res.data.split('\n').filter(function (e) { return e.length; });
-			ui.files = data.map(function (e) {
-				return e.match(rex);
-			});
-			updateDom();
-		}
-		function updateDom() {
-			var lists = ui.files;
-			var dom = ``;
-			lists.forEach(function (e) {
-				// console.log('!!!', e);
-				dom += `<tr>`;
-				dom += `<td><a href="${ui.dir}${e[7]}" target="_blank">${e[7]}</a></td>`;
-				dom += `<td>${e[5]}</td>`;
-				dom += `<td>${e[6]}</td>`;
-				dom += `<td>${e[1]}</td>`;
-				dom += `<td>`;
-				if (e[0][0] == 'd') {
-					dom += `<a href="#chdir" onclick="cgi.chdir('${ui.dir}${e[7]}').then(refresh);return false">chdir</a>`;
-				} else {
-					dom += `<a href="${ui.dir}${e[7]}" target="_blank" download>download</a>`;
-				}
-				dom += `<a href="#delete" onclick="cgi.file('rm','.${ui.dir}${e[7]}').then(refresh);return false">delete</a>`;
-				dom += `</td>`;
-				dom += `</tr>`;
-			});
-			var el = document.querySelector('#lists');
-			el.innerHTML = dom;
-		}
+			async function update() {
+				var rex = /(..........)\s+(\S+)\s+(\w+)\s+(\w+)\s+(\S+)\s+(............)\s+(.+)/;
+				var res = await cgi.file("ls -lhpLA", `.${ui.dir}`);
+				var data = res.data.split("\n").filter(function (e) {
+					return e.length;
+				});
+				ui.files = data.map(function (e) {
+					return e.match(rex);
+				});
+				updateDom();
+			}
+			function updateDom() {
+				var lists = ui.files;
+				var dom = ``;
+				lists.forEach(function (e) {
+					// console.log('!!!', e);
+					dom += `<tr>`;
+					dom += `<td><a href="${ui.dir}${e[7]}" target="_blank">${e[7]}</a></td>`;
+					dom += `<td>${e[5]}</td>`;
+					dom += `<td>${e[6]}</td>`;
+					dom += `<td>${e[1]}</td>`;
+					dom += `<td>`;
+					if (e[0][0] == "d") {
+						dom += `<a href="#chdir" onclick="cgi.chdir('${ui.dir}${e[7]}').then(refresh);return false">chdir</a>`;
+					} else {
+						dom += `<a href="${ui.dir}${e[7]}" target="_blank" download>download</a>`;
+					}
+					dom += `<a href="#delete" onclick="cgi.file('rm','.${ui.dir}${e[7]}').then(refresh);return false">delete</a>`;
+					dom += `</td>`;
+					dom += `</tr>`;
+				});
+				var el = document.querySelector("#lists");
+				el.innerHTML = dom;
+			}
 
-		async function refresh() {
-			await update();
-		}
-		setTimeout(refresh, 0);
-	</script>
-</body>
-
+			async function refresh() {
+				await update();
+			}
+			setTimeout(refresh, 0);
+		</script>
+	</body>
 </html>

@@ -49,6 +49,10 @@ remote=https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/23.05.5
 [ "$url" != "" ] && {
   cd $pkgdir/cache/temp
   curl -k $url -o $2
+}
+
+[ "$3" = "install" ] && {
+  cd $pkgdir/cache/temp
   tar -xzf $2
   tar -xzvf data.tar.gz
   test -d usr && cp -rf usr $pkgdir
